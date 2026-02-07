@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from services.chat_service import chatService
+from services.chat_service import ChatService
 
 app = FastAPI()
-chat_service = chatService(model_name="llama3")
+chat_service = ChatService(model_name="llama3")
 
-class chatRequest(BaseModel):
+class ChatRequest(BaseModel):
     message: str
 
 @app.get("/")
@@ -14,7 +14,7 @@ def home():
 
 
 @app.post("/chat")
-def chat(req: chatRequest):
+def chat(req: ChatRequest):
     reply = chat_service.generate_response(req.message)
     return {"response": reply}
 
