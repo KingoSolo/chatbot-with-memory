@@ -1,7 +1,7 @@
 import ollama
 import numpy as np
 
-class embeddingService:
+class EmbeddingService:
     def __init__(self,model_name="llama3"):
         self.model = model_name
 

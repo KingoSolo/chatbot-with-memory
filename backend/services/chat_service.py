@@ -13,24 +13,42 @@ class ChatService:
         self.summary_service = SummaryService(model_name)
 
     def generate_response(self, message: str) -> str:
-        # Step 1: Embed the user message
+        """
+        Generate a chatbot response using:
+        - short-term vector memory (FAISS)
+        - long-term summary memory
+        - semantic retrieval
+        - local Llama 3 model via Ollama
+        """
+
+        # Step 1 — Embed the user message
         vector = self.embedder.embed_text(message)
 
-        # Step 2: Save it to vector memory
+        # Step 2 — Store the embedded message in vector memory
         self.vector_memory.add(vector, message)
 
-        # Step 3: Search memory for meaning-related history
+        # Step 3 — Retrieve meaning-related past context
         related_memory = self.vector_memory.search(vector, k=3)
+        related_context = "\n".join(related_memory)
 
-        # Step 4: Build context for Llama3
-        system_context = "\n".join(related_memory)
+        # Step 4 — Get long-term summary memory
+        long_term_summary = self.summary_service.get_summary()
 
+        # Step 5 — Build the full system message
+        system_context = f"""
+Long-term memory:
+{long_term_summary}
+
+Relevant short-term memory:
+{related_context}
+"""
+
+        # Step 6 — Chat with Llama3 using memory-enhanced context
         messages = [
-            {"role": "system", "content": f"Relevant memory:\n{system_context}"},
+            {"role": "system", "content": system_context},
             {"role": "user", "content": message}
         ]
 
-        # Step 5: Get AI response
         response = ollama.chat(
             model=self.model_name,
             messages=messages
@@ -38,7 +56,11 @@ class ChatService:
 
         reply = response["message"]["content"]
 
-        # Step 6: Store reply in simple memory
+        # Step 7 — Update long-term memory summary
+        important_info = f"User: {message}\nAssistant: {reply}"
+        self.summary_service.update_summary(important_info)
+
+        # Step 8 — Also store assistant reply in simple list memory
         self.memory_list.add_message("assistant", reply)
 
         return reply
