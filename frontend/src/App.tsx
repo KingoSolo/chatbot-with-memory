@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ChatMessage from "./components/ChatMessage";
+import ChatMessage from "./components/chat/ChatMessage";
 
 type Message = {
   role: "user" | "assistant";
@@ -52,7 +52,7 @@ function App() {
         )}
       </div>
 
-      <h1 className="text-red-500">Tailwind OK</h1>
+      <h1 className="text-red-500">Tailwind is OK</h1>
 
       <div className="p-4 border-t border-gray-700">
         <input
